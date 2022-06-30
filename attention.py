@@ -5,6 +5,8 @@ from torch import nn
 from einops import rearrange
 import time
 
+# from utils import Residual, PreNorm, FeedForward
+
 
 class Attention(nn.Module):
     def __init__(self, dim, heads=8):
