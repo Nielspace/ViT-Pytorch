@@ -49,7 +49,6 @@ N_EPOCHS = Config.N_EPOCHS
 TRAIN_LOSS_HISTORY =  Config.TRAIN_LOSS_HISTORY
 VAL_LOSS_HISTORY = Config.VAL_LOSS_HISTORY
 
-train_data, val_data, test_data = dataset(BATCH_SIZE, CROP_SIZE)
 model =  ViT(
     image_size=IMG_SIZE, 
     patch_size=PATCH_SIZE, 
@@ -61,7 +60,6 @@ model =  ViT(
     mlp_dim=MPL_DIM,
 )
 
-optimizer = optim.Adam(model.parameters(), lr=Config.LR)
 
 def neptune_monitoring():
     PARAMS = {}
@@ -70,7 +68,7 @@ def neptune_monitoring():
             PARAMS[key] = val 
     return PARAMS
 
-params = neptune_monitoring()
+
 
 def train_Engine(n_epochs,
                  train_data,
@@ -81,7 +79,7 @@ def train_Engine(n_epochs,
                  device,
                  train_loss_history,
                  val_loss_history,
-                 ):
+                 monitoring=True):
 
     for epoch in range(1, N_EPOCHS + 1):
         print('Epoch:', epoch)
@@ -98,14 +96,20 @@ def train_Engine(n_epochs,
             loss = F.nll_loss(output, target)
             loss.backward()
             optimizer.step()
+            
+            if monitoring:
+                run['training_loss'].log(loss.item())
+
+
             if i % 100 == 0:
                 print('[' +  '{:5}'.format(i * len(data)) + '/' + '{:5}'.format(total_samples) +
                     ' (' + '{:3.0f}'.format(100 * i / len(train_data)) + '%)]  Loss: ' +
                     '{:6.4f}'.format(loss.item()))
                 train_loss_history.append(loss.item())
-                
+
+            
         model.eval()
-        total_samples = len(data_loader.dataset)
+        total_samples = len(valid_data.dataset)
         correct_samples = 0
         total_loss = 0
 
@@ -117,14 +121,17 @@ def train_Engine(n_epochs,
                 target = target.to(device)
 
                 output = F.log_softmax(model(data), dim=1)
-                loss = F.nll_loss(output, target, reduction='sum')
+                val_loss = F.nll_loss(output, target, reduction='sum')
                 _, pred = torch.max(output, dim=1)
                 
-                total_loss += loss.item()
+                total_loss += val_loss.item()
                 correct_samples += pred.eq(target).sum()
                 
                 avg_loss = total_loss / total_samples
                 val_loss_history.append(avg_loss)
+
+                if monitoring:
+                    run['training_loss'].log(avg_loss)
                 print('\nAverage test loss: ' + '{:.4f}'.format(avg_loss) +
                     '  Accuracy:' + '{:5}'.format(correct_samples) + '/' +
                     '{:5}'.format(total_samples) + ' (' +
@@ -132,6 +139,16 @@ def train_Engine(n_epochs,
 
 
 if __name__ == '__main__':
+
+    train_data, val_data, test_data = dataset(BATCH_SIZE, CROP_SIZE)
+    params = neptune_monitoring()
+    optimizer = optim.Adam(model.parameters(), lr=Config.LR)
+    run = neptune.init(
+        project="nielspace/ViT-bird-classification",
+        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkYjRhYzI0Ny0zZjBmLTQ3YjYtOTY0Yi05ZTQ4ODM3YzE0YWEifQ==",
+    )
+    run["parameters"] = params
+    
     train_Engine(n_epochs=N_EPOCHS,
                  train_data=train_data,
                  val_data=val_data,
@@ -141,3 +158,5 @@ if __name__ == '__main__':
                  device=DEVICE,
                  train_loss_history=TRAIN_LOSS_HISTORY,
                  val_loss_history=VAL_LOSS_HISTORY,)
+
+    neptune.save_checkpoint(model, optimizer, epoch=N_EPOCHS)

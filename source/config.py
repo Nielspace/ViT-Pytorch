@@ -3,7 +3,7 @@ class Config:
     IMG_SIZE = 100
     PATCH_SIZE = 10
     CROP_SIZE = 100
-    BATCH_SIZE = 2
+    BATCH_SIZE = 1
     N_SAMPLES = 400
     N_TRAIN = 400   
     N_VAL = 400
