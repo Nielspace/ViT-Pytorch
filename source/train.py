@@ -81,7 +81,9 @@ def train_Engine(n_epochs,
                  val_loss_history,
                  monitoring=True):
 
-    for epoch in range(1, N_EPOCHS + 1):
+    yhat = []
+    y_o = []
+    for epoch in range(1, n_epochs + 1):
         print('Epoch:', epoch)
         for i, (data, target) in tqdm(enumerate(train_data), total=len(train_data), desc="Training"):
             total_samples = len(train_data.dataset)
@@ -89,23 +91,22 @@ def train_Engine(n_epochs,
             #device
             model = model.to(device)
             x = data.to(device)
-            target = target.to(device)
-
+            y = target.to(device)
+            
             optimizer.zero_grad()
             output = F.log_softmax(model.forward(x), dim=1)
-            loss = F.nll_loss(output, target)
+
+            y_o.append(y)
+            yhat.append(output)
+            
+            accuracy = torch.sum(output == y).item()/len(train_data)
+            loss = F.nll_loss(output, y)
             loss.backward()
             optimizer.step()
             
             if monitoring:
-                run['training_loss'].log(loss.item())
-
-
-            if i % 100 == 0:
-                print('[' +  '{:5}'.format(i * len(data)) + '/' + '{:5}'.format(total_samples) +
-                    ' (' + '{:3.0f}'.format(100 * i / len(train_data)) + '%)]  Loss: ' +
-                    '{:6.4f}'.format(loss.item()))
-                train_loss_history.append(loss.item())
+                run['Training_loss'].log(loss.item())
+                run['Training_acc'].log(accuracy.item())
 
             
         model.eval()
@@ -118,24 +119,21 @@ def train_Engine(n_epochs,
                 
                 model = model.to(device)
                 x = data.to(device)
-                target = target.to(device)
+                y = target.to(device)
 
-                output = F.log_softmax(model(data), dim=1)
-                val_loss = F.nll_loss(output, target, reduction='sum')
+                output = F.log_softmax(model(x), dim=1)
+                val_loss = F.nll_loss(output, y, reduction='sum')
                 _, pred = torch.max(output, dim=1)
                 
                 total_loss += val_loss.item()
-                correct_samples += pred.eq(target).sum()
-                
+                correct_samples += pred.eq(y).sum()
+                val_acc = torch.sum(pred == y).item()/len(val_data)
                 avg_loss = total_loss / total_samples
                 val_loss_history.append(avg_loss)
 
                 if monitoring:
-                    run['training_loss'].log(avg_loss)
-                print('\nAverage test loss: ' + '{:.4f}'.format(avg_loss) +
-                    '  Accuracy:' + '{:5}'.format(correct_samples) + '/' +
-                    '{:5}'.format(total_samples) + ' (' +
-                    '{:4.2f}'.format(100.0 * correct_samples / total_samples) + '%)\n')
+                    run['Val_loss'].log(avg_loss)
+                    run['Val_accuracy'].log(val_acc)
 
 
 if __name__ == '__main__':
