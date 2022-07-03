@@ -157,4 +157,4 @@ if __name__ == '__main__':
                  train_loss_history=TRAIN_LOSS_HISTORY,
                  val_loss_history=VAL_LOSS_HISTORY,)
 
-    neptune.save_checkpoint(model, optimizer, epoch=N_EPOCHS)
+    # neptune.save_checkpoint(model, optimizer, epoch=N_EPOCHS)
