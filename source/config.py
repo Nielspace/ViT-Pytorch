@@ -1,6 +1,6 @@
 class Config:
     #Image configuration
-    IMG_SIZE = 100
+    IMG_SIZE = 128
     PATCH_SIZE = 10
     CROP_SIZE = 100
     BATCH_SIZE = 1
@@ -15,8 +15,12 @@ class Config:
 
     #Model configuration
     N_CLASSES = 400
-    N_CHANNELS = 3
-    N_DIM = 64
+    IN_CHANNELS = 3
+    HIDDEN_SIZE = 768
+    NUM_ATTENTION_HEADS = 12
+    
+    ATTENTION_DROPOUT_RATE = 0.1
+ 
     DEPTH = 400
     HEADS = 8
     MPL_DIM = 128
