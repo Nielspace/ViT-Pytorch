@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 class Mlp(nn.Module):
-    def __init__(self, hidden_size=768, linear_dim=3072, dropout_rate=0.1, std_norm=1e-6):
+    def __init__(self, hidden_size, linear_dim, dropout_rate, std_norm):
         super(Mlp, self).__init__()
         self.fc1 = Linear(hidden_size, linear_dim)
         self.fc2 = Linear(linear_dim, hidden_size)
@@ -27,4 +27,5 @@ class Mlp(nn.Module):
         x = self.fc2(x)
         x = self.dropout(x)
         return x
+    
     

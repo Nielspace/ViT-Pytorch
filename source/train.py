@@ -77,84 +77,73 @@ def train_Engine(n_epochs,
                  optimizer,
                  loss_fn,
                  device,
-                 train_loss_history,
-                 val_loss_history,
                  monitoring=True):
 
-    yhat = []
-    y_o = []
+    logits_m = []
+    yo = []
+    attention = []
+    confusion_matrix = torch.zeros(400, 400)
+    best_accuracy = 0
     for epoch in range(1, n_epochs + 1):
         print('Epoch:', epoch)
         for i, (data, target) in tqdm(enumerate(train_data), total=len(train_data), desc="Training"):
             total_samples = len(train_data.dataset)
-            
+            best_accuracy = 0
             #device
             model = model.to(device)
             x = data.to(device)
             y = target.to(device)
-            
             optimizer.zero_grad()
-            output = F.log_softmax(model.forward(x), dim=1)
-
-            y_o.append(y)
-            yhat.append(output)
             
-            accuracy = torch.sum(output == y).item()/len(train_data)
-            loss = F.nll_loss(output, y)
+            logits, attn_weights = model(x)
+            proba = F.log_softmax(logits, dim=1)
+            loss = F.nll_loss(proba, y, reduction='sum')
             loss.backward()
+            
+            yhat = torch.argmax(logits, dim=1)
+            accuracy = torch.sum(yhat == y).item()/len(train_data)            
             optimizer.step()
             
             if monitoring:
                 run['Training_loss'].log(loss.item())
-                run['Training_acc'].log(accuracy.item())
+                run['Training_acc'].log(accuracy)
 
-            
+            if accuracy > best_accuracy:
+                best_model = model
+        torch.save(best_model.state_dict(), 'model.pt')
         model.eval()
-        total_samples = len(valid_data.dataset)
+        total_samples = len(val_data.dataset)
         correct_samples = 0
         total_loss = 0
-
+        
         with torch.no_grad():
-            for i, (data, target) in tqdm(enumerate(valid_data), total=len(train_data), desc="Valuation"):
+            for i, (data, target) in tqdm(enumerate(val_data), total=len(val_data), desc="Evaluation"):
                 
                 model = model.to(device)
                 x = data.to(device)
                 y = target.to(device)
+            
+                logits, attn_weights = model(x)
+                proba = F.log_softmax(logits, dim=1)
+                val_loss = F.nll_loss(proba, y, reduction='sum')
+                _, pred = torch.max(logits, dim=1)
+                
+                logits_m.append(logits)
+                yo.append(y)
+                attention.append(attn_weights)
+                for t, p in zip(y.view(-1), pred.view(-1)):
+                    confusion_matrix[t.long(), p.long()] += 1
 
-                output = F.log_softmax(model(x), dim=1)
-                val_loss = F.nll_loss(output, y, reduction='sum')
-                _, pred = torch.max(output, dim=1)
                 
                 total_loss += val_loss.item()
                 correct_samples += pred.eq(y).sum()
                 val_acc = torch.sum(pred == y).item()/len(val_data)
                 avg_loss = total_loss / total_samples
-                val_loss_history.append(avg_loss)
 
                 if monitoring:
                     run['Val_loss'].log(avg_loss)
                     run['Val_accuracy'].log(val_acc)
-
-
-if __name__ == '__main__':
-
-    train_data, val_data, test_data = dataset(BATCH_SIZE, CROP_SIZE)
-    params = neptune_monitoring()
-    optimizer = optim.Adam(model.parameters(), lr=Config.LR)
-    run = neptune.init(
-        project="nielspace/ViT-bird-classification",
-        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkYjRhYzI0Ny0zZjBmLTQ3YjYtOTY0Yi05ZTQ4ODM3YzE0YWEifQ==",
-    )
-    run["parameters"] = params
     
-    train_Engine(n_epochs=N_EPOCHS,
-                 train_data=train_data,
-                 val_data=val_data,
-                 model=model,
-                 optimizer=optimizer,
-                 loss_fn=LOSS_FN,
-                 device=DEVICE,
-                 train_loss_history=TRAIN_LOSS_HISTORY,
-                 val_loss_history=VAL_LOSS_HISTORY,)
+    return confusion_matrix, logits_m, yo, attention
 
     # neptune.save_checkpoint(model, optimizer, epoch=N_EPOCHS)

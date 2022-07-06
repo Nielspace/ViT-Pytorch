@@ -1,63 +1,129 @@
 import torch
+from torch import nn
+from torch.nn import CrossEntropyLoss, Dropout, Linear, Conv2d, LayerNorm
 import torch.nn.functional as F
 
-from torch import nn
-from einops import rearrange
-import time
+import math
+import copy
 
-from attention import Attention
-from utils import FeedForward, PreNorm, Residual
+from embeddings import Embeddings
+from attention_block import Block
+
+
+
+class Encoder(nn.Module):
+    def __init__(self, num_layers, 
+                       hidden_size, 
+                       num_attention_heads,
+                       linear_dim, 
+                       dropout_rate,
+                       attention_dropout_rate, 
+                       eps, 
+                       std_norm):
+        super(Encoder, self).__init__()
+        self.layer = nn.ModuleList()
+        self.encoder_norm = LayerNorm(hidden_size, eps=eps)
+        for _ in range(num_layers):
+            layer = Block(num_attention_heads, hidden_size, linear_dim, dropout_rate,
+                          attention_dropout_rate, eps, std_norm)
+            self.layer.append(copy.deepcopy(layer))
+
+    def forward(self, hidden_states):
+        attn_weights = []
+        for layer_block in self.layer:
+            hidden_states, weights = layer_block(hidden_states)
+            attn_weights.append(weights)
+        encoded = self.encoder_norm(hidden_states)
+        return encoded, attn_weights
+
 
 class Transformer(nn.Module):
-    def __init__(self, dim, depth, heads, mlp_dim):
-        super().__init__()
-        self.layers = nn.ModuleList([])
-        for _ in range(depth):
-            self.layers.append(nn.ModuleList([
-                Residual(PreNorm(dim, Attention(dim, heads = heads))),
-                Residual(PreNorm(dim, FeedForward(dim, mlp_dim)))
-            ]))
+    def __init__(self, 
+                 img_size,
+                 hidden_size,
+                 in_channels,
+                 num_layers,
+                 num_attention_heads,
+                 linear_dim,
+                 dropout_rate,
+                 attention_dropout_rate,
+                 eps,
+                 std_norm):
+        super(Transformer, self).__init__()
+        self.embeddings = Embeddings(img_size, 
+                                     hidden_size, 
+                                     in_channels)
+        
+        self.encoder = Encoder(num_layers, 
+                               hidden_size, 
+                               num_attention_heads,  
+                               linear_dim=config.LINEAR_DIM, 
+                               dropout_rate=config.DROPOUT_RATE,
+                               attention_dropout_rate=config.ATTENTION_DROPOUT_RATE, 
+                               eps=config.EPS, 
+                               std_norm=config.STD_NORM)
 
-    def forward(self, x, mask=None):
-        for attn, ff in self.layers:
-            x = attn(x, mask=mask)
-            x = ff(x)
-        return x
+    def forward(self, input_ids):
+        embedding_output = self.embeddings(input_ids)
+        encoded, attn_weights = self.encoder(embedding_output)
+        return encoded, attn_weights
 
 
-class ViT(nn.Module):
-    def __init__(self, *, image_size, patch_size, num_classes, dim, depth, heads, mlp_dim, channels=3):
-        super().__init__()
-        assert image_size % patch_size == 0, 'image dimensions must be divisible by the patch size'
-        num_patches = (image_size // patch_size) ** 2
-        patch_dim = channels * patch_size ** 2
+class VisionTransformer(nn.Module):
+    def __init__(self, 
+                 img_size,
+                 num_classes,
+                 hidden_size,
+                 in_channels,
+                 num_layers,
+                 num_attention_heads,
+                 linear_dim,
+                 dropout_rate,
+                 attention_dropout_rate,
+                 eps,
+                 std_norm):
+        super(VisionTransformer, self).__init__()
+        self.classifier = 'token'
 
-        self.patch_size = patch_size
+        self.transformer=Transformer(img_size,
+                                     hidden_size,
+                                     in_channels,
+                                     num_layers,
+                                     num_attention_heads,
+                                     linear_dim,
+                                     dropout_rate,
+                                     attention_dropout_rate,
+                                     eps,
+                                     std_norm)
+        self.head = Linear(hidden_size, num_classes)
 
-        self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, dim))
-        self.patch_to_embedding = nn.Linear(patch_dim, dim)
-        self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
-        self.transformer = Transformer(dim, depth, heads, mlp_dim)
+    def forward(self, x, labels=None):
+        x, attn_weights = self.transformer(x)
+        logits = self.head(x[:, 0])
 
-        self.to_cls_token = nn.Identity()
+        if labels is not None:
+            loss_fct = CrossEntropyLoss()
+            loss = loss_fct(logits.view(-1, 400), labels.view(-1))
+            return loss
+        else:
+            return logits, attn_weights
+    
+if __name__ == '__main__':
+    from config import Config
+    config = Config()
+    x = torch.randn(1, config.IN_CHANNELS*config.IMG_SIZE*config.IMG_SIZE)
+    x = x.reshape(1, config.IN_CHANNELS, config.IMG_SIZE, config.IMG_SIZE)
+    model = VisionTransformer(img_size=config.IMG_SIZE,
+                 num_classes=config.NUM_CLASSES,
+                 hidden_size=config.HIDDEN_SIZE,
+                 in_channels=config.IN_CHANNELS,
+                 num_layers=config.NUM_LAYERS,
+                 num_attention_heads=config.NUM_ATTENTION_HEADS,
+                 linear_dim=config.LINEAR_DIM,
+                 dropout_rate=config.DROPOUT_RATE,
+                 attention_dropout_rate=config.ATTENTION_DROPOUT_RATE,
+                 eps=config.EPS,
+                 std_norm=config.STD_NORM)
 
-        self.mlp_head = nn.Sequential(
-            nn.Linear(dim, mlp_dim),
-            nn.GELU(),
-            nn.Linear(mlp_dim, num_classes)
-        )
-
-    def forward(self, img, mask=None):
-        p = self.patch_size
-
-        x = rearrange(img, 'b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = p, p2 = p)
-        x = self.patch_to_embedding(x)
-
-        cls_tokens = self.cls_token.expand(img.shape[0], -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)
-        x += self.pos_embedding
-        x = self.transformer(x, mask)
-
-        x = self.to_cls_token(x[:, 0])
-        return self.mlp_head(x)
-
+    x = model(x)
+    print(x)
