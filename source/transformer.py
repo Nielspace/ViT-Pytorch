@@ -57,11 +57,11 @@ class Transformer(nn.Module):
         self.encoder = Encoder(num_layers, 
                                hidden_size, 
                                num_attention_heads,  
-                               linear_dim=config.LINEAR_DIM, 
-                               dropout_rate=config.DROPOUT_RATE,
-                               attention_dropout_rate=config.ATTENTION_DROPOUT_RATE, 
-                               eps=config.EPS, 
-                               std_norm=config.STD_NORM)
+                               linear_dim, 
+                               dropout_rate,
+                               attention_dropout_rate, 
+                               eps, 
+                               std_norm)
 
     def forward(self, input_ids):
         embedding_output = self.embeddings(input_ids)
@@ -113,6 +113,7 @@ if __name__ == '__main__':
     config = Config()
     x = torch.randn(1, config.IN_CHANNELS*config.IMG_SIZE*config.IMG_SIZE)
     x = x.reshape(1, config.IN_CHANNELS, config.IMG_SIZE, config.IMG_SIZE)
+
     model = VisionTransformer(img_size=config.IMG_SIZE,
                  num_classes=config.NUM_CLASSES,
                  hidden_size=config.HIDDEN_SIZE,

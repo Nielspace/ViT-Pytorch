@@ -1,9 +1,9 @@
 class Config:
     #Image configuration
-    IMG_SIZE = 128
+    IMG_SIZE = 32
     PATCH_SIZE = 10
     CROP_SIZE = 100
-    BATCH_SIZE = 30
+    BATCH_SIZE = 1
     DATASET_SAMPLE = 'full'
 
 
@@ -33,6 +33,4 @@ class Config:
     DEVICE = ["cpu","mps","cuda"]
 
     #Training configuration
-    N_EPOCHS = 100
-    TRAIN_LOSS_HISTORY = []
-    VAL_LOSS_HISTORY = []
+    N_EPOCHS = 1

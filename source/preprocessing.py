@@ -17,23 +17,41 @@ train_dir = '/Users/nielspace/Documents/data/birds/train/'
 val_dir = '/Users/nielspace/Documents/data/birds/valid/'
 test_dir = '/Users/nielspace/Documents/data/birds/test/'
 
-def dataset(bs, crop_size):
+def Dataset(bs, crop_size, sample_size='full'):
     transformations = torchvision.transforms.Compose([
         torchvision.transforms.ToTensor(),
-        torchvision.transforms.Resize(Config.CROP_SIZE), 
-        torchvision.transforms.CenterCrop(Config.CROP_SIZE),
+        torchvision.transforms.Resize(crop_size),
+        torchvision.transforms.CenterCrop(crop_size),
         torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
-
-    train_data = torchvision.datasets.ImageFolder(root=train_dir, transform=transformations)
+    
+    
+    
+    if sample_size == 'full':
+        train_data = torchvision.datasets.ImageFolder(root=train_dir, transform=transformations)
+        valid_data = torchvision.datasets.ImageFolder(root=val_dir, transform=transformations)
+        test_data = torchvision.datasets.ImageFolder(root=test_dir, transform=transformations)
+        
+        train_data = torch.utils.data.DataLoader(train_data, shuffle=True, batch_size=bs)
+        valid_data = torch.utils.data.DataLoader(valid_data, shuffle=True, batch_size=bs)
+        test_loader = torch.utils.data.DataLoader(test_data, shuffle=True, batch_size=bs)
+    
+    else:
+        train_data = torchvision.datasets.ImageFolder(root=train_dir, transform=transformations)
+        indices = torch.arange(sample_size)
+        train_data = torch.utils.data.Subset(train_data, indices)
+        train_data = torch.utils.data.DataLoader(train_data, shuffle=True, batch_size=bs)
+    
+    
+    valid_data = torchvision.datasets.ImageFolder(root=val_dir, transform=transformations)    
+    valid_data = torch.utils.data.DataLoader(valid_data, shuffle=True, batch_size=bs)
+    
     test_data = torchvision.datasets.ImageFolder(root=test_dir, transform=transformations)
-    valid_data = torchvision.datasets.ImageFolder(root=val_dir, transform=transformations)
+    test_data = torch.utils.data.DataLoader(test_data, shuffle=True, batch_size=bs)
     
-    train_loader = torch.utils.data.DataLoader(train_data, shuffle=True, batch_size=Config.BATCH_SIZE)
-    val_loader = torch.utils.data.DataLoader(valid_data, shuffle=True, batch_size=Config.BATCH_SIZE)
-    test_loader = torch.utils.data.DataLoader(test_data, shuffle=True, batch_size=Config.BATCH_SIZE)
+    return train_data, valid_data, test_data
 
-    
-    return train_loader, val_loader, test_loader
+
+
 
 

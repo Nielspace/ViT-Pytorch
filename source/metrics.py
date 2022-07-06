@@ -1,13 +1,13 @@
 
 
 
-def confusion_matrix(self):
+def confusion_matrix(y, pred):
     """
     Calculates the confusion matrix for the model.
     """
-    
-    y_pred = self.predict(self.X_test)
-    cm = confusion_matrix(self.y_test, y_pred)
+    confusion_matrix = torch.zeros(400, 400)
+    for t, p in zip(y.view(-1), pred.view(-1)):
+        confusion_matrix[t.long(), p.long()] += 1
     return cm
 
 def AUC_ROC(self):
