@@ -15,12 +15,13 @@ from tqdm import tqdm
 from transformer import VisionTransformer
 
 
-def neptune_monitoring():
+def neptune_monitoring(config):
     PARAMS = {}
-    for key, val in Config.__dict__.items():
+    for key, val in config.__dict__.items():
         if key not in ['__module__', '__dict__', '__weakref__', '__doc__']:
             PARAMS[key] = val 
     return PARAMS
+
 
 
 
@@ -54,15 +55,19 @@ def train_Engine(n_epochs,
             yhat = torch.argmax(logits, dim=1)
             accuracy = torch.sum(yhat == y).item()/len(train_data)            
             optimizer.step()
-            
-            if monitoring:
-                run['Training_loss'].log(loss.item())
-                run['Training_acc'].log(accuracy)
 
             if accuracy > best_accuracy:
                 best_model = model
+                torch.save(best_model.state_dict(), 'model.pt')
+                if monitoring:
+                    run["model_checkpoints/ViT"].upload("model.pt")
 
-        torch.save(best_model.state_dict(), 'model.pt')
+            if monitoring:
+                run['Training_loss'].log(loss.item())
+                run['Training_acc'].log(accuracy)
+                
+
+        
         model.eval()
         total_samples = len(val_data.dataset)
         correct_samples = 0
@@ -93,6 +98,12 @@ if __name__ == '__main__':
     from preprocessing import Dataset 
     from config import Config
     config = Config()
+    params = neptune_monitoring(Config)
+    run = neptune.init(
+                        project="nielspace/ViT-bird-classification",
+                        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkYjRhYzI0Ny0zZjBmLTQ3YjYtOTY0Yi05ZTQ4ODM3YzE0YWEifQ==",
+                    )
+    run['parameters'] = params 
 
     model = VisionTransformer(img_size=config.IMG_SIZE,
                  num_classes=config.NUM_CLASSES,
@@ -117,5 +128,7 @@ if __name__ == '__main__':
                 model=model,
                 optimizer=optimizer,
                 loss_fn='nll_loss',
-                device=config.DEVICE[1], monitoring=False)                              
+                device=config.DEVICE[1], monitoring=True)                              
     print("done")
+
+    

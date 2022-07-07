@@ -7,15 +7,13 @@ from torchvision import transforms
 import torch
 import streamlit as st
 
+from config import Config
 from transformer import VisionTransformer
 
+config = Config()
+
 st.set_option('deprecation.showfileUploaderEncoding', False)
-st.title("Bean Image Classifier")
-st.text("Provide URL of Bird Image: ")
-
-
-# set title of app
-st.title("Simple Image Classification Application")
+st.title("Bird Image Classifier")
 st.write("")
 
 # enable users to upload images for the model to make predictions
