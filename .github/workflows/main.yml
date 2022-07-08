@@ -22,4 +22,5 @@ jobs:
       - name: Install dependencies
         run: |
           make install
+          make run
 

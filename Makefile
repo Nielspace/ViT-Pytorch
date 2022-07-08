@@ -7,6 +7,6 @@ install:
 		pip install -r requirements.txt
 
 run:
-	python app.py
+	streamlit run app.py
 
-all: install lint 
+all: install  
