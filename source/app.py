@@ -7,9 +7,13 @@ from torchvision import transforms
 import torch
 import streamlit as st
 
-from config import Config
-from transformer import VisionTransformer
+from embeddings import Embeddings
+from attention_block import Block
+from linear import Mlp
+from attention import Attention
+from transformer import VisionTransformer, Transformer, Encoder
 
+from config import Config
 config = Config()
 
 st.set_option('deprecation.showfileUploaderEncoding', False)
@@ -29,20 +33,7 @@ def predict(image):
     :rtype: list
     :return: top 5 predictions ranked by highest probability
     """
-
-    model = VisionTransformer(img_size=config.IMG_SIZE,
-                num_classes=config.NUM_CLASSES,
-                hidden_size=config.HIDDEN_SIZE,
-                in_channels=config.IN_CHANNELS,
-                num_layers=config.NUM_LAYERS,
-                num_attention_heads=config.NUM_ATTENTION_HEADS,
-                linear_dim=config.LINEAR_DIM,
-                dropout_rate=config.DROPOUT_RATE,
-                attention_dropout_rate=config.ATTENTION_DROPOUT_RATE,
-                eps=config.EPS,
-                std_norm=config.STD_NORM)
-
-    model = model.load_state_dict('metadata/model.pt')
+    model = torch.load('../metadata/model.pth')
 
     # transform the input image through resizing, normalization
     transform = transforms.Compose([
@@ -56,7 +47,7 @@ def predict(image):
     # load the image, pre-process it, and make predictions
     img = Image.open(image)
     x = transform(img)
-    x = torch.unsqueeze(img, 0)
+    x = torch.unsqueeze(x, 0)
     model.eval()
     logits, attn_w = model(x)
 
@@ -65,7 +56,7 @@ def predict(image):
 
     # return the top 5 predictions ranked by highest probabilities
     prob = torch.nn.functional.softmax(logits, dim = 1)[0] * 100
-    _, indices = torch.sort(out, descending = True)
+    _, indices = torch.sort(logits, descending = True)
     return [(classes[idx], prob[idx].item()) for idx in indices[0][:5]]
 
 
@@ -79,4 +70,4 @@ if file_up is not None:
 
     # print out the top 5 prediction labels with scores
     for i in labels:
-        st.write("Prediction (index, name)", i[0], ",   Score: ", i[1])
+        st.write(f"Prediction:= {i[0]} score {i[1]:.2f}")

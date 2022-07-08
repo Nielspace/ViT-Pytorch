@@ -1,6 +1,7 @@
 .neptune 
 .DS_Store 
 /metadata/model.pt 
+/metadata/model.pth 
 /source/model.pth
 /source/__pycache__ 
 
