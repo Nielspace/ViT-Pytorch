@@ -4,6 +4,4 @@ torchvision
 tqdm
 opencv-python
 streamlit
-math
-copy
 neptune-client
