@@ -22,6 +22,4 @@ jobs:
       - name: Install dependencies
         run: |
           make install
-      - name: Lint with pytlint
-        run: |
-          make lint
+
