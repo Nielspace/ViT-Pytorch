@@ -11,7 +11,7 @@ steps:
   - |
     echo "Docker Container Built"
     ls -la
-    ls -al models/
+    ls -al metadata/
 - name: "gcr.io/cloud-builders/gke-deploy"
   args:
   - run

@@ -34,12 +34,12 @@ def predict(image):
     :return: top 5 predictions ranked by highest probability
     """
     
-    model = torch.load("model.pth", map_location=torch.device('cpu'))
+    model = torch.load("metadata/models/model.pth", map_location=torch.device('cpu'))
 
     # transform the input image through resizing, normalization
     transform = transforms.Compose([
-        transforms.Resize(128),
-        transforms.CenterCrop(128),
+        transforms.Resize(config.IMG_SIZE),
+        transforms.CenterCrop(config.IMG_SIZE),
         transforms.ToTensor(),
         transforms.Normalize(
             mean = [0.485, 0.456, 0.406],
@@ -52,7 +52,7 @@ def predict(image):
     model.eval()
     logits, attn_w = model(x)
 
-    with open('../metadata/classes.txt', 'r') as f:
+    with open('metadata/classes.txt', 'r') as f:
         classes = f.read().split('\n')
 
     # return the top 5 predictions ranked by highest probabilities

@@ -1,6 +1,6 @@
 class Config:
     #Image configuration
-    IMG_SIZE = 32
+    IMG_SIZE = 160
     PATCH_SIZE = 10
     CROP_SIZE = 100
     BATCH_SIZE = 1

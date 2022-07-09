@@ -10,6 +10,8 @@ COPY . ./
 RUN ls -la $APP_HOME/
 
 # Install dependencies
+RUN pip install --upgrade pip
+
 RUN pip install -r requirements.txt
 
 # Run the streamlit on container startup
