@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: cv-app
-        image: gcr.io/vision-transformer-pytorch/ViT:v1
+        image: gcr.io/vision-transformer-pytorch/vit:v1
         ports:
         - containerPort: 8501

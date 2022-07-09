@@ -1,9 +1,9 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/vision-transformer-pytorch/ViT:v1', '.']
+  args: ['build', '-t', 'gcr.io/vision-transformer-pytorch/vit:v1', '.']
   timeout: 180s
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['push', 'gcr.io/vision-transformer-pytorch/ViT:v1']
+  args: ['push', 'gcr.io/vision-transformer-pytorch/vit:v1']
 - name: 'gcr.io/cloud-builders/gcloud'
   entrypoint: "bash"
   args:
