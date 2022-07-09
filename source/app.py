@@ -33,7 +33,8 @@ def predict(image):
     :rtype: list
     :return: top 5 predictions ranked by highest probability
     """
-    model = torch.load('../metadata/model.pth')
+    
+    model = torch.load("model.pth", map_location=torch.device('cpu'))
 
     # transform the input image through resizing, normalization
     transform = transforms.Compose([

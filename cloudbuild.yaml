@@ -1,0 +1,20 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/vision-transformer-pytorch/ViT:v1', '.']
+  timeout: 180s
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'gcr.io/vision-transformer-pytorch/ViT:v1']
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: "bash"
+  args:
+  - "-c"
+  - |
+    echo "Docker Container Built"
+    ls -la
+    ls -al models/
+- name: "gcr.io/cloud-builders/gke-deploy"
+  args:
+  - run
+  - --filename=kubernetes/
+  - --location=us-west1-b
+  - --cluster=project-kube
