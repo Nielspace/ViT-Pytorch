@@ -10,4 +10,4 @@ install:
 run:
 	python source/test.py
 
-all: install  
+all: install run 

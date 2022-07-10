@@ -78,4 +78,5 @@ if __name__ == '__main__':
     model = torch.load('metadata/models/model.pth', map_location=torch.device('cpu'))
     attention_viz(model, test_data, PATH)
 
-   
+
+
