@@ -1,4 +1,4 @@
-import torch 
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -21,13 +21,15 @@ from tqdm import tqdm
 
 config = Config()
 
-train_dir = '../../../data/birds/train/'
-val_dir = '../../../data/birds/valid/'
-test_dir = '../../../data/birds/test/'
+train_dir = "../../../data/birds/train/"
+val_dir = "../../../data/birds/valid/"
+test_dir = "../../../data/birds/test/"
 
-train_data, val_data, test_data = Dataset(config.BATCH_SIZE,config.IMG_SIZE, config.DATASET_SAMPLE)
+train_data, val_data, test_data = Dataset(
+    config.BATCH_SIZE, config.IMG_SIZE, config.DATASET_SAMPLE
+)
 
-total_samples =len(test_data.dataset)
+total_samples = len(test_data.dataset)
 correct_samples = 0
 total_loss = 0
 
@@ -35,9 +37,9 @@ confusion_matrix = torch.zeros(400, 400)
 
 
 def test(model, test_data):
-    c = 0 
+    c = 0
     total = 0
-    device = 'mps'
+    device = "mps"
     n_epochs = 2
     total_step = len(train_data)
     iterations = 12
@@ -56,17 +58,17 @@ def test(model, test_data):
                 for batch_idx, (data, target) in enumerate(tepoch):
                     total_samples = len(train_data.dataset)
                     best_accuracy = 0
-                    #device
+                    # device
                     model = model.to(device)
                     x = data.to(device)
                     y = target.to(device)
                     logits, attn_weights = model(x)
                     proba = F.log_softmax(logits, dim=1)
-                    loss = F.nll_loss(proba, y, reduction='sum')
+                    loss = F.nll_loss(proba, y, reduction="sum")
                     _, pred = torch.max(logits, dim=1)
-                    c += torch.sum(pred==y).item()
+                    c += torch.sum(pred == y).item()
                     total += target.size(0)
-                    tepoch.set_postfix(loss=loss.item(), accuracy= (100 * c / total))
+                    tepoch.set_postfix(loss=loss.item(), accuracy=(100 * c / total))
 
                     acc__.append((100 * c / total))
                     loss__.append(loss.item())
@@ -78,24 +80,22 @@ def test(model, test_data):
 
     return acc__, loss__, confusion_matrix
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     PATH = "metadata/Abbott's_babbler_(Malacocincla_abbotti).jpg"
-    model = torch.load('metadata/models/model.pth', map_location=torch.device('cpu'))
+    model = torch.load("metadata/models/model.pth", map_location=torch.device("cpu"))
     attention_viz(model, test_data, PATH)
 
     acc__, loss__, confusion_matrix = test(model, test_data)
-    
+
     plt.figure(figsize=(10, 10))
     sns.heatmap(confusion_matrix.numpy())
-    plt.savefig('metadata/results/confusion_matrix.png', dpi=300)
+    plt.savefig("metadata/results/confusion_matrix.png", dpi=300)
     plt.show()
 
     plt.figure(figsize=(10, 10))
-    plt.plot(acc__, label='accuracy')
-    plt.plot(loss__, label='loss')
+    plt.plot(acc__, label="accuracy")
+    plt.plot(loss__, label="loss")
     plt.legend()
-    plt.savefig('metadata/results/accuracy_loss.png', dpi=300)
+    plt.savefig("metadata/results/accuracy_loss.png", dpi=300)
     plt.show()
-
-    
-    

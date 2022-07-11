@@ -9,6 +9,7 @@ from config import Config
 
 config = Config()
 
+
 class Attention(nn.Module):
     def __init__(self, num_attention_heads, hidden_size, attention_dropout_rate):
         super(Attention, self).__init__()
@@ -27,7 +28,10 @@ class Attention(nn.Module):
         self.softmax = torch.nn.Softmax(dim=-1)
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        new_x_shape = x.size()[:-1] + (
+            self.num_attention_heads,
+            self.attention_head_size,
+        )
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -43,7 +47,7 @@ class Attention(nn.Module):
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
         attention_scores = attention_scores / math.sqrt(self.attention_head_size)
         attention_probs = self.softmax(attention_scores)
-        weights = attention_probs 
+        weights = attention_probs
         attention_probs = self.attn_dropout(attention_probs)
 
         context_layer = torch.matmul(attention_probs, value_layer)
@@ -58,14 +62,19 @@ class Attention(nn.Module):
 if __name__ == "__main__":
     from embeddings import Embeddings
 
-    x = torch.randn(1, config.IN_CHANNELS*config.IMG_SIZE*config.IMG_SIZE)
+    x = torch.randn(1, config.IN_CHANNELS * config.IMG_SIZE * config.IMG_SIZE)
     x = x.reshape(1, config.IN_CHANNELS, config.IMG_SIZE, config.IMG_SIZE)
 
-    embeddings = Embeddings(img_size=(config.IMG_SIZE, config.IMG_SIZE), 
-                            hidden_size=config.HIDDEN_SIZE, in_channels=config.IN_CHANNELS)
+    embeddings = Embeddings(
+        img_size=(config.IMG_SIZE, config.IMG_SIZE),
+        hidden_size=config.HIDDEN_SIZE,
+        in_channels=config.IN_CHANNELS,
+    )
 
-    att = Attention(num_attention_heads=config.NUM_ATTENTION_HEADS,
-                    hidden_size=config.HIDDEN_SIZE,
-                    attention_dropout_rate=config.ATTENTION_DROPOUT_RATE)
+    att = Attention(
+        num_attention_heads=config.NUM_ATTENTION_HEADS,
+        hidden_size=config.HIDDEN_SIZE,
+        attention_dropout_rate=config.ATTENTION_DROPOUT_RATE,
+    )
 
-    print(att(embeddings(x))) 
+    print(att(embeddings(x)))

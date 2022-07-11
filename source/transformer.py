@@ -10,22 +10,31 @@ from embeddings import Embeddings
 from attention_block import Block
 
 
-
 class Encoder(nn.Module):
-    def __init__(self, num_layers, 
-                       hidden_size, 
-                       num_attention_heads,
-                       linear_dim, 
-                       dropout_rate,
-                       attention_dropout_rate, 
-                       eps, 
-                       std_norm):
+    def __init__(
+        self,
+        num_layers,
+        hidden_size,
+        num_attention_heads,
+        linear_dim,
+        dropout_rate,
+        attention_dropout_rate,
+        eps,
+        std_norm,
+    ):
         super(Encoder, self).__init__()
         self.layer = nn.ModuleList()
         self.encoder_norm = LayerNorm(hidden_size, eps=eps)
         for _ in range(num_layers):
-            layer = Block(num_attention_heads, hidden_size, linear_dim, dropout_rate,
-                          attention_dropout_rate, eps, std_norm)
+            layer = Block(
+                num_attention_heads,
+                hidden_size,
+                linear_dim,
+                dropout_rate,
+                attention_dropout_rate,
+                eps,
+                std_norm,
+            )
             self.layer.append(copy.deepcopy(layer))
 
     def forward(self, hidden_states):
@@ -38,30 +47,32 @@ class Encoder(nn.Module):
 
 
 class Transformer(nn.Module):
-    def __init__(self, 
-                 img_size,
-                 hidden_size,
-                 in_channels,
-                 num_layers,
-                 num_attention_heads,
-                 linear_dim,
-                 dropout_rate,
-                 attention_dropout_rate,
-                 eps,
-                 std_norm):
+    def __init__(
+        self,
+        img_size,
+        hidden_size,
+        in_channels,
+        num_layers,
+        num_attention_heads,
+        linear_dim,
+        dropout_rate,
+        attention_dropout_rate,
+        eps,
+        std_norm,
+    ):
         super(Transformer, self).__init__()
-        self.embeddings = Embeddings(img_size, 
-                                     hidden_size, 
-                                     in_channels)
-        
-        self.encoder = Encoder(num_layers, 
-                               hidden_size, 
-                               num_attention_heads,  
-                               linear_dim, 
-                               dropout_rate,
-                               attention_dropout_rate, 
-                               eps, 
-                               std_norm)
+        self.embeddings = Embeddings(img_size, hidden_size, in_channels)
+
+        self.encoder = Encoder(
+            num_layers,
+            hidden_size,
+            num_attention_heads,
+            linear_dim,
+            dropout_rate,
+            attention_dropout_rate,
+            eps,
+            std_norm,
+        )
 
     def forward(self, input_ids):
         embedding_output = self.embeddings(input_ids)
@@ -70,31 +81,35 @@ class Transformer(nn.Module):
 
 
 class VisionTransformer(nn.Module):
-    def __init__(self, 
-                 img_size,
-                 num_classes,
-                 hidden_size,
-                 in_channels,
-                 num_layers,
-                 num_attention_heads,
-                 linear_dim,
-                 dropout_rate,
-                 attention_dropout_rate,
-                 eps,
-                 std_norm):
+    def __init__(
+        self,
+        img_size,
+        num_classes,
+        hidden_size,
+        in_channels,
+        num_layers,
+        num_attention_heads,
+        linear_dim,
+        dropout_rate,
+        attention_dropout_rate,
+        eps,
+        std_norm,
+    ):
         super(VisionTransformer, self).__init__()
-        self.classifier = 'token'
+        self.classifier = "token"
 
-        self.transformer=Transformer(img_size,
-                                     hidden_size,
-                                     in_channels,
-                                     num_layers,
-                                     num_attention_heads,
-                                     linear_dim,
-                                     dropout_rate,
-                                     attention_dropout_rate,
-                                     eps,
-                                     std_norm)
+        self.transformer = Transformer(
+            img_size,
+            hidden_size,
+            in_channels,
+            num_layers,
+            num_attention_heads,
+            linear_dim,
+            dropout_rate,
+            attention_dropout_rate,
+            eps,
+            std_norm,
+        )
         self.head = Linear(hidden_size, num_classes)
 
     def forward(self, x, labels=None):
@@ -107,24 +122,28 @@ class VisionTransformer(nn.Module):
             return loss
         else:
             return logits, attn_weights
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     from config import Config
+
     config = Config()
-    x = torch.randn(1, config.IN_CHANNELS*config.IMG_SIZE*config.IMG_SIZE)
+    x = torch.randn(1, config.IN_CHANNELS * config.IMG_SIZE * config.IMG_SIZE)
     x = x.reshape(1, config.IN_CHANNELS, config.IMG_SIZE, config.IMG_SIZE)
 
-    model = VisionTransformer(img_size=config.IMG_SIZE,
-                 num_classes=config.NUM_CLASSES,
-                 hidden_size=config.HIDDEN_SIZE,
-                 in_channels=config.IN_CHANNELS,
-                 num_layers=config.NUM_LAYERS,
-                 num_attention_heads=config.NUM_ATTENTION_HEADS,
-                 linear_dim=config.LINEAR_DIM,
-                 dropout_rate=config.DROPOUT_RATE,
-                 attention_dropout_rate=config.ATTENTION_DROPOUT_RATE,
-                 eps=config.EPS,
-                 std_norm=config.STD_NORM)
+    model = VisionTransformer(
+        img_size=config.IMG_SIZE,
+        num_classes=config.NUM_CLASSES,
+        hidden_size=config.HIDDEN_SIZE,
+        in_channels=config.IN_CHANNELS,
+        num_layers=config.NUM_LAYERS,
+        num_attention_heads=config.NUM_ATTENTION_HEADS,
+        linear_dim=config.LINEAR_DIM,
+        dropout_rate=config.DROPOUT_RATE,
+        attention_dropout_rate=config.ATTENTION_DROPOUT_RATE,
+        eps=config.EPS,
+        std_norm=config.STD_NORM,
+    )
 
     x = model(x)
     print(x)

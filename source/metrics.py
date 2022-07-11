@@ -1,7 +1,12 @@
-
-import torch 
+import torch
 import numpy as np
-from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score, classification_report)
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    classification_report,
+)
 import matplotlib.pyplot as plt
 import seaborn as sns
 
@@ -16,21 +21,27 @@ def Confusion_matrix(y, pred, vis=True):
     if vis:
         plt.figure(figsize=(10, 10))
         sns.heatmap(confusion_matrix.numpy())
-        plt.savefig('metadata/confusion_matrix.png', dpi=300)
+        plt.savefig("metadata/confusion_matrix.png", dpi=300)
         plt.show()
 
 
-def metrics(y, pred): 
+def metrics(y, pred):
     classification_report__ = classification_report(y, pred)
     accuracy_score__ = accuracy_score(y, pred)
     precision_score__ = precision_score(y, pred)
     recall_score__ = recall_score(y, pred)
     f1_score__ = f1_score(y, pred)
 
-    return classification_report__, accuracy_score__, precision_score__, recall_score__, f1_score__ 
+    return (
+        classification_report__,
+        accuracy_score__,
+        precision_score__,
+        recall_score__,
+        f1_score__,
+    )
 
 
-def auroc(model, data, N_classes=400, device='cpu'):
+def auroc(model, data, N_classes=400, device="cpu"):
     model.eval()
     y_test = []
     y_score = []
@@ -65,7 +76,7 @@ def auroc(model, data, N_classes=400, device='cpu'):
     tpr = dict()
     local_roc_auc = dict()
     for i in range(N_classes):
-        fpr[i], tpr[i], _ = roc_curve(np.array(y_test[:, i]),np.array(y_score[:, i]))
+        fpr[i], tpr[i], _ = roc_curve(np.array(y_test[:, i]), np.array(y_score[:, i]))
         local_roc_auc[i] = auc(fpr[i], tpr[i])
     # Compute micro-average ROC curve and ROC area
     fpr["micro"], tpr["micro"], _ = roc_curve(y_test.ravel(), y_score.ravel())
@@ -90,29 +101,42 @@ def auroc(model, data, N_classes=400, device='cpu'):
 
     # Plot all ROC curves
     plt.figure()
-    plt.plot(fpr["micro"], tpr["micro"],
-             label='micro-average ROC curve (area = {0:0.2f})'
-                   ''.format(local_roc_auc["micro"]),
-             color='deeppink', linestyle=':', linewidth=4)
+    plt.plot(
+        fpr["micro"],
+        tpr["micro"],
+        label="micro-average ROC curve (area = {0:0.2f})"
+        "".format(local_roc_auc["micro"]),
+        color="deeppink",
+        linestyle=":",
+        linewidth=4,
+    )
 
-    plt.plot(fpr["macro"], tpr["macro"],
-             label='macro-average ROC curve (area = {0:0.2f})'
-                   ''.format(local_roc_auc["macro"]),
-             color='navy', linestyle=':', linewidth=4)
+    plt.plot(
+        fpr["macro"],
+        tpr["macro"],
+        label="macro-average ROC curve (area = {0:0.2f})"
+        "".format(local_roc_auc["macro"]),
+        color="navy",
+        linestyle=":",
+        linewidth=4,
+    )
 
-    colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
+    colors = cycle(["aqua", "darkorange", "cornflowerblue"])
     for i, color in zip(range(N_classes), colors):
-        plt.plot(fpr[i], tpr[i], color=color, lw=2,
-                 label='ROC curve of class {0} (area = {1:0.2f})'
-                       ''.format(i, local_roc_auc[i]))
+        plt.plot(
+            fpr[i],
+            tpr[i],
+            color=color,
+            lw=2,
+            label="ROC curve of class {0} (area = {1:0.2f})"
+            "".format(i, local_roc_auc[i]),
+        )
 
-    plt.plot([0, 1], [0, 1], 'k--', lw=2)
+    plt.plot([0, 1], [0, 1], "k--", lw=2)
     plt.xlim([-1e-2, 1.0])
     plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristics')
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title("Receiver operating characteristics")
     plt.legend(loc="lower right")
     plt.show()
-
-
