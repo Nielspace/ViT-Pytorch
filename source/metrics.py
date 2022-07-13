@@ -140,3 +140,6 @@ def auroc(model, data, N_classes=400, device="cpu"):
     plt.title("Receiver operating characteristics")
     plt.legend(loc="lower right")
     plt.show()
+
+
+

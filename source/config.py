@@ -1,8 +1,8 @@
 class Config:
     # Image configuration
     IMG_SIZE = 160
-    PATCH_SIZE = 10
-    CROP_SIZE = 100
+    PATCH_SIZE = 14
+    CROP_SIZE = 160
     BATCH_SIZE = 1
     DATASET_SAMPLE = "full"
 
@@ -13,7 +13,7 @@ class Config:
     # Model configuration
     NUM_CLASSES = 400
     IN_CHANNELS = 3
-    HIDDEN_SIZE = 768
+    HIDDEN_SIZE = 800
     NUM_ATTENTION_HEADS = 12
     LINEAR_DIM = 3072
     NUM_LAYERS = 12
