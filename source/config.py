@@ -13,7 +13,7 @@ class Config:
     # Model configuration
     NUM_CLASSES = 400
     IN_CHANNELS = 3
-    HIDDEN_SIZE = 800
+    HIDDEN_SIZE = 764
     NUM_ATTENTION_HEADS = 12
     LINEAR_DIM = 3072
     NUM_LAYERS = 12
