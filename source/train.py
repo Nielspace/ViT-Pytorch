@@ -23,70 +23,82 @@ def neptune_monitoring(config):
     return PARAMS
 
 
-def train_Engine(
-    n_epochs, train_data, val_data, model, optimizer, loss_fn, device, monitoring=True
-):
-
+def train_Engine(n_epochs,
+                 train_data,
+                 val_data,
+                 model,
+                 optimizer,
+                 loss_fn,
+                 device,
+                 monitoring=True):
+    
+    train_accuracy = 0
+    val_accuracy = 0
+    
     best_accuracy = 0
+    total = 0
+    
     for epoch in range(1, n_epochs + 1):
-        print("Epoch:", epoch)
-        for i, (data, target) in tqdm(
-            enumerate(train_data), total=len(train_data), desc="Training"
-        ):
-            total_samples = len(train_data.dataset)
-            best_accuracy = 0
-            model.train()
-            # device
-            model = model.to(device)
-            x = data.to(device)
-            y = target.to(device)
-            optimizer.zero_grad()
-
-            logits, attn_weights = model(x)
-            proba = F.log_softmax(logits, dim=1)
-            loss = F.nll_loss(proba, y, reduction="sum")
-            loss.backward()
-
-            yhat = torch.argmax(logits, dim=1)
-            accuracy = torch.sum(yhat == y).item() / len(train_data)
-            optimizer.step()
-
-            if accuracy > best_accuracy:
-                best_model = model
-                torch.save(best_model.state_dict(), "model.pt")
-                if monitoring:
-                    run["model_checkpoints/ViT"].upload("model.pt")
-
-            if monitoring:
-                run["Training_loss"].log(loss.item())
-                run["Training_acc"].log(accuracy)
-
-        model.eval()
-        total_samples = len(val_data.dataset)
-        correct_samples = 0
-        total_loss = 0
-
-        with torch.no_grad():
-            for i, (data, target) in tqdm(
-                enumerate(val_data), total=len(val_data), desc="Evaluation"
-            ):
-
+        total = 0
+        with tqdm(train_data, unit="iteration") as train_epoch:
+            train_epoch.set_description(f"Epoch {epoch}")
+            for i, (data, target) in enumerate(train_epoch):
+                total_samples = len(train_data.dataset)
+                #device
                 model = model.to(device)
                 x = data.to(device)
                 y = target.to(device)
+                optimizer.zero_grad()
 
                 logits, attn_weights = model(x)
                 proba = F.log_softmax(logits, dim=1)
-                val_loss = F.nll_loss(proba, y, reduction="sum")
-                _, pred = torch.max(logits, dim=1)
-                total_loss += val_loss.item()
-                correct_samples += pred.eq(y).sum()
-                val_acc = torch.sum(pred == y).item() / len(val_data)
-                avg_loss = total_loss / total_samples
-
+                loss = F.nll_loss(proba, y, reduction='sum')
+                loss.backward()           
+                optimizer.step()
+        
+                _, pred = torch.max(logits, dim=1) #
+                train_accuracy += torch.sum(pred==y).item()
+                total += target.size(0)
+                accuracy_=(100 *  train_accuracy/ total)
+                train_epoch.set_postfix(loss=loss.item(), accuracy=accuracy_)
+                
                 if monitoring:
-                    run["Val_loss"].log(avg_loss)
-                    run["Val_accuracy"].log(val_acc)
+                    run['Training_loss'].log(loss.item())
+                    run['Training_acc'].log(accuracy_)
+
+                if accuracy_ > best_accuracy:
+                    best_accuracy = accuracy_
+                    best_model = model
+                    torch.save(best_model, f'/metadata/model.pth')
+                
+        
+        total_samples = len(val_data.dataset)
+        correct_samples = 0
+        total_ = 0
+        model.eval()
+        with torch.no_grad():
+            with tqdm(val_data, unit="iteration") as val_epoch:
+                val_epoch.set_description(f"Epoch {epoch}")
+                for i, (data, target) in enumerate(val_epoch):
+                    
+                    model = model.to(device)
+                    x = data.to(device)
+                    y = target.to(device)
+                    
+                    logits,attn_weights = model(x)
+                    proba = F.log_softmax(logits, dim=1)
+                    val_loss = F.nll_loss(proba, y, reduction='sum')
+                    
+                    _, pred = torch.max(logits, dim=1)#
+                    val_accuracy += torch.sum(pred==y).item()
+                    total_ += target.size(0)
+                    val_accuracy_ = (100 *  val_accuracy/ total_)
+                    val_epoch.set_postfix(loss=val_loss.item(), accuracy=val_accuracy_)
+
+                    if monitoring:
+                        run['Val_accuracy '].log(val_accuracy_)
+                        run['Val_loss'].log(loss.item())
+    
 
 
 if __name__ == "__main__":
