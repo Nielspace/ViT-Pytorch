@@ -34,10 +34,7 @@ def train_Engine(n_epochs,
     
     train_accuracy = 0
     val_accuracy = 0
-    
     best_accuracy = 0
-    total = 0
-    
     for epoch in range(1, n_epochs + 1):
         total = 0
         with tqdm(train_data, unit="iteration") as train_epoch:
