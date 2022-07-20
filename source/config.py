@@ -15,10 +15,12 @@ class Config:
     IN_CHANNELS = 3
     HIDDEN_SIZE = 764
     NUM_ATTENTION_HEADS = 12
+
     LINEAR_DIM = 3072
     NUM_LAYERS = 12
 
     ATTENTION_DROPOUT_RATE = 0.1
+
     DROPOUT_RATE = 0.1
     STD_NORM = 1e-6
     EPS = 1e-6
@@ -32,5 +34,3 @@ class Config:
 
     # Training configuration
     N_EPOCHS = 1
-
-

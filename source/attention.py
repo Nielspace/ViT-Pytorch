@@ -12,11 +12,12 @@ config = Config()
 
 class Attention(nn.Module):
     def __init__(self, num_attention_heads, hidden_size, attention_dropout_rate):
+
         super(Attention, self).__init__()
+
         self.num_attention_heads = num_attention_heads
         self.attention_head_size = int(hidden_size / self.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
-
         self.query = Linear(hidden_size, self.all_head_size)
         self.key = Linear(hidden_size, self.all_head_size)
         self.value = Linear(hidden_size, self.all_head_size)
