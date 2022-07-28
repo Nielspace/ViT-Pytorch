@@ -34,3 +34,4 @@ class Config:
 
     # Training configuration
     N_EPOCHS = 1
+

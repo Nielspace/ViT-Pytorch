@@ -139,4 +139,4 @@ if __name__ == "__main__":
         device=config.DEVICE[1],
         monitoring=True,
     )
-    print("done")
+
