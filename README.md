@@ -49,6 +49,8 @@ pip3 install torch torchvision torchaudio
 This will install the following: 
 > Installing collected packages: urllib3, typing-extensions, pillow, numpy, idna, charset-normalizer, certifi, torch, requests, torchvision, torchaudio
 
+![Alt text](metadata/VIT.png)
+
 ![Alt text](metadata/results/accuracy_loss.png)
 
 ![Alt text](metadata/results/attn.png)
