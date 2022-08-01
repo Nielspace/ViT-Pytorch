@@ -1,13 +1,10 @@
 # Vision Transformer using Pytorch
 
-## Setup a machine learning environment with PyTorch on Mac (short version) 
-
-> **Note:** 
-> As of June 30 2022, accelerated PyTorch for Mac (PyTorch using the Apple Silicon GPU) is still in beta, so expect some rough edges.
+## Setup a deep learning environment with PyTorch on Mac
 
 **Requirements:**
 * Apple Silicon Mac (M1, M2, M1 Pro, M1 Max, M1 Ultra, etc).
-* macOS 12.3+ (PyTorch will work on previous versions but the GPU on your Mac won't get used, this means slower code).
+* macOS 12.3+ 
 
 ### Steps
 
@@ -56,3 +53,13 @@ This will install the following:
 ![Alt text](metadata/results/attn.png)
 
 ![Alt text](metadata/results/confusion_matrix.png)
+
+# References
+1. An Image Is Worth 16x16 Words: Transformers For Image Recognition At Scale
+2. Are Transformers More Robust Than CNNs?
+3. https://www.kdnuggets.com/2022/01/machine-learning-models-die-silence.html
+4. https://github.com/jeonsworld/ViT-pytorch 
+5. ​​https://gist.github.com/khizirsiddiqui/559a91dab223944fb83f8480715d2582
+6. https://github.com/srivatsan88/ContinousModelDeploy 
+7. Building MLOps Pipeline for NLP: Machine Translation Task 
+8. https://github.com/mrdbourke/pytorch-apple-silicon
