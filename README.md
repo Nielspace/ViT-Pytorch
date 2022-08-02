@@ -46,13 +46,22 @@ pip3 install torch torchvision torchaudio
 This will install the following: 
 > Installing collected packages: urllib3, typing-extensions, pillow, numpy, idna, charset-normalizer, certifi, torch, requests, torchvision, torchaudio
 
+# Vision Transformer
+
+## Architecture of the model
+
 ![Alt text](metadata/VIT.png)
 
-![Alt text](metadata/results/accuracy_loss.png)
+<!-- ![Alt text](metadata/results/accuracy_loss.png) -->
 
+## Attention Visualization 
 ![Alt text](metadata/results/attn.png)
 
+
+## Confusion Matric
 ![Alt text](metadata/results/confusion_matrix.png)
+
+
 
 # References
 1. An Image Is Worth 16x16 Words: Transformers For Image Recognition At Scale
