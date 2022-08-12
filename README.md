@@ -67,7 +67,7 @@ This will install the following:
 
 ## Train
 
-## Runing the application 
+## Running the application 
 
 # References
 1. An Image Is Worth 16x16 Words: Transformers For Image Recognition At Scale
