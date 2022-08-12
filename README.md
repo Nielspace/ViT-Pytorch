@@ -61,7 +61,13 @@ This will install the following:
 ## Confusion Matric
 ![Alt text](metadata/results/confusion_matrix.png)
 
+# Usage
 
+## Installation 
+
+## Train
+
+## Runing the application 
 
 # References
 1. An Image Is Worth 16x16 Words: Transformers For Image Recognition At Scale
